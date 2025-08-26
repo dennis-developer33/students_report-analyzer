@@ -1,45 +1,49 @@
 import pandas as pd
 
-def process_csv(filepath):
-    """Load CSV into a pandas DataFrame and normalize columns."""
-    df = pd.read_csv(filepath)
+def process_csv(filepath, chunksize=50000):
+    """
+    Load CSV into a pandas DataFrame in chunks to avoid memory issues.
+    Normalizes columns and validates required fields.
+    """
+    chunks = []
+    for chunk in pd.read_csv(filepath, chunksize=chunksize):
+        # --- Normalize column names ---
+        chunk.columns = chunk.columns.str.strip().str.replace(" ", "_")
 
-    # Normalize column names (strip spaces + unify underscores)
-    df.columns = df.columns.str.strip().str.replace(" ", "_")
+        # --- Fix known variations ---
+        column_mapping = {
+            "Visits__to_Website": "Visits_to_Website",
+            "Visits__To__Website": "Visits_to_Website",
+            "Total_Visits_By_User": "Total_Visits"
+        }
+        chunk.rename(columns=column_mapping, inplace=True)
 
-    # Map CSV columns to expected names (handle known variations)
-    column_mapping = {
-        "Visits__to_Website": "Visits_to_Website",  # double underscore fix
-        "Visits__To__Website": "Visits_to_Website",
-        "Total_Visits_By_User": "Total_Visits"
-    }
-    df.rename(columns=column_mapping, inplace=True)
+        # --- Ensure required columns exist ---
+        required = [
+            "Username_TRNO",
+            "Student_FullName",
+            "Student_Class",
+            "Website_Address",
+            "Visits_to_Website",
+            "Last_Visit_Time",
+            "Total_Visits"
+        ]
+        for col in required:
+            if col not in chunk.columns:
+                raise ValueError(f"Missing required column: {col}")
 
-    # Required columns
-    required = [
-        "Username_TRNO",
-        "Student_FullName",
-        "Student_Class",
-        "Website_Address",
-        "Visits_to_Website",
-        "Last_Visit_Time",
-        "Total_Visits"
-    ]
-    for col in required:
-        if col not in df.columns:
-            raise ValueError(f"Missing required column: {col}")
+        # --- Data type normalization ---
+        chunk["Last_Visit_Time"] = pd.to_datetime(chunk["Last_Visit_Time"], errors="coerce")
+        chunk["Visits_to_Website"] = pd.to_numeric(chunk["Visits_to_Website"], errors="coerce").fillna(0).astype(int)
+        chunk["Total_Visits"] = pd.to_numeric(chunk["Total_Visits"], errors="coerce").fillna(0).astype(int)
 
-    # Convert datetime
-    df["Last_Visit_Time"] = pd.to_datetime(df["Last_Visit_Time"], errors="coerce")
+        for col in ["Username_TRNO", "Student_FullName", "Website_Address", "Student_Class"]:
+            chunk[col] = chunk[col].astype(str).fillna("")
 
-    # Ensure numeric columns
-    df["Visits_to_Website"] = pd.to_numeric(df["Visits_to_Website"], errors="coerce").fillna(0).astype(int)
-    df["Total_Visits"] = pd.to_numeric(df["Total_Visits"], errors="coerce").fillna(0).astype(int)
+        chunks.append(chunk)
 
-    # Convert searchable columns to strings
-    for col in ["Username_TRNO", "Student_FullName", "Website_Address", "Student_Class"]:
-        df[col] = df[col].astype(str).fillna("")
-
+    # Combine all chunks into one DataFrame
+    df = pd.concat(chunks, ignore_index=True)
     return df
 
 

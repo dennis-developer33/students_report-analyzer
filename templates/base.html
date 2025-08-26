@@ -22,13 +22,29 @@
             <div class="flex justify-between items-center h-16">
                 <h1 class="text-xl font-bold text-blue-600">Student Web Activity Analyzer</h1>
                 <div class="space-x-4">
-                    <a href="{{ url_for('upload_file') }}" class="text-gray-700 hover:text-blue-600 font-medium">Upload</a>
+                    <a href="{{ url_for('index') }}" class="text-gray-700 hover:text-blue-600 font-medium">Upload</a>
                     <a href="{{ url_for('data_view') }}" class="text-gray-700 hover:text-blue-600 font-medium">Data View</a>
                     <a href="{{ url_for('analytics') }}" class="text-gray-700 hover:text-blue-600 font-medium">Analytics</a>
                 </div>
             </div>
         </div>
     </nav>
+
+    <!-- ✅ Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="max-w-3xl mx-auto px-4 mt-4 space-y-3">
+          {% for category, message in messages %}
+            <div class="fade-in p-4 rounded-lg text-center font-medium 
+                        {% if category == 'success' %} bg-green-100 text-green-800 
+                        {% elif category == 'error' %} bg-red-100 text-red-800 
+                        {% else %} bg-gray-100 text-gray-800 {% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
     <main class="max-w-7xl mx-auto px-4 py-8">
         {% block content %}{% endblock %}

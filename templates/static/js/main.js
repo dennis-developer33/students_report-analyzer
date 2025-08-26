@@ -44,11 +44,9 @@ function showPage(page) {
 // ===== File Upload =====
 const dropZone = document.getElementById('dropZone');
 const fileInput = document.getElementById('fileInput');
-const uploadProgress = document.getElementById('uploadProgress');
-const progressBar = document.getElementById('progressBar');
+const statusBox = document.getElementById('status');
 
-dropZone.addEventListener('click', () => fileInput.click());
-
+// Drag & drop
 dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     dropZone.classList.add('drag-over');
@@ -63,37 +61,50 @@ dropZone.addEventListener('drop', (e) => {
     if (files.length > 0) uploadFile(files[0]);
 });
 
+// File selection
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) uploadFile(e.target.files[0]);
 });
 
+// Upload logic
 function uploadFile(file) {
     if (!file.name.endsWith('.csv')) {
-        alert('Please upload a CSV file.');
+        showStatus('❌ Please upload a CSV file.', 'error');
         return;
     }
 
     const formData = new FormData();
     formData.append('file', file);
 
-    uploadProgress.classList.remove('hidden');
-    progressBar.style.width = '0%';
+    showStatus('⏳ Uploading file...', 'info');
 
     fetch('/upload', { method: 'POST', body: formData })
         .then(response => response.json())
         .then(data => {
-            progressBar.style.width = '100%';
+            showStatus('✅ File uploaded successfully!', 'success');
             setTimeout(() => {
-                uploadProgress.classList.add('hidden');
                 showPage('data');
                 loadData();
-            }, 500);
+            }, 800);
         })
         .catch(err => {
-            alert('Error uploading file.');
             console.error(err);
-            uploadProgress.classList.add('hidden');
+            showStatus('❌ Error uploading file.', 'error');
         });
+}
+
+// Helper: update status box
+function showStatus(message, type) {
+    statusBox.textContent = message;
+    statusBox.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-blue-100', 'text-blue-800');
+
+    if (type === 'success') {
+        statusBox.classList.add('bg-green-100', 'text-green-800');
+    } else if (type === 'error') {
+        statusBox.classList.add('bg-red-100', 'text-red-800');
+    } else {
+        statusBox.classList.add('bg-blue-100', 'text-blue-800');
+    }
 }
 
 // ===== Data Table =====

@@ -8,27 +8,50 @@
 
     <div class="bg-white rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
         <form id="uploadForm" action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data">
-            <div class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-400 cursor-pointer" onclick="document.getElementById('fileInput').click()">
+            
+            <!-- ✅ Drop Zone -->
+            <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-400 cursor-pointer">
                 <div class="space-y-6">
                     <div class="text-6xl">📊</div>
                     <div>
                         <h3 class="text-xl font-semibold text-gray-900 mb-2">Drop your CSV file here</h3>
                         <p class="text-gray-500 mb-4">or click to browse files</p>
+                        
+                        <!-- Hidden File Input -->
                         <input type="file" id="fileInput" name="file" accept=".csv" class="hidden">
-                        <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium shadow-md" onclick="document.getElementById('fileInput').click()">Choose CSV File</button>
+
+                        <!-- ✅ Fixed: Only one trigger -->
+                        <button type="button" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium shadow-md"
+                                onclick="document.getElementById('fileInput').click();">
+                            Choose CSV File
+                        </button>
                     </div>
                 </div>
             </div>
 
+            <!-- Info -->
             <div class="mt-8 p-4 bg-blue-50 rounded-lg">
                 <h4 class="font-semibold text-blue-900 mb-2">Expected CSV Format:</h4>
-                <p class="text-sm text-blue-800">Username_TRNO, Student_FullName, Student_Class, Website_Address, Visits_to_Website, Last_Visit_Time, Total_Visits</p>
+                <p class="text-sm text-blue-800">
+                    Username_TRNO, Student_FullName, Student_Class, Website_Address, Visits_to_Website, Last_Visit_Time, Total_Visits
+                </p>
             </div>
 
+            <!-- Upload Button -->
             <div class="mt-6 text-center">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">Upload CSV</button>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    Upload CSV
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    // ✅ Make drop zone itself trigger file input
+    // document.getElementById('dropZone').addEventListener('click', () => {
+    //     document.getElementById('fileInput').click();
+    // });
+</script>
 {% endblock %}

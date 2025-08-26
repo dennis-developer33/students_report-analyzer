@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mamal Students Browsing History Reporting System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#1e40af',
+                        accent: '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-gray-800 font-sans relative">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center py-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold">M</span>
+                </div>
+                <span class="text-xl font-bold text-gray-900">Mamal</span>
+            </div>
+            <nav class="hidden md:flex space-x-8">
+                <a href="/" class="text-gray-700 hover:text-primary font-medium">Home</a>
+                <a href="/data" class="text-gray-700 hover:text-primary font-medium">Reports</a>
+                <a href="/upload" class="text-gray-700 hover:text-primary font-medium">Upload CSV</a>
+                <a href="#contact" class="text-gray-700 hover:text-primary font-medium">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-blue-50 to-white py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <h1 class="text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                    Track, Analyze, and Understand Student Browsing Activity
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 leading-relaxed">
+                    Gain valuable insights into student online behavior with our comprehensive reporting system. Upload browsing data, generate detailed reports, and make data-driven decisions to enhance learning outcomes.
+                </p>
+                <a href="/upload" class="bg-primary hover:bg-secondary text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl inline-block">
+                    Get Started
+                </a>
+            </div>
+            <div class="flex justify-center">
+                <img src="https://via.placeholder.com/400x300.png?text=Dashboard+Illustration" alt="Dashboard illustration" class="rounded-2xl shadow-2xl">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Powerful Features for Educational Insights</h2>
+            <p class="text-xl text-gray-600 mb-16 max-w-3xl mx-auto">
+                Everything you need to understand and improve student online learning experiences
+            </p>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Upload Browsing Data</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Easily upload CSV files containing student browsing history. Automatically process your data for analysis.
+                    </p>
+                </div>
+                <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">View Detailed Reports</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Generate comprehensive reports with interactive charts and tables. Filter by student, time period, or website category.
+                    </p>
+                </div>
+                <div class="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Gain Insights for Better Learning</h3>
+                    <p class="text-gray-600 leading-relaxed">
+                        Discover patterns in student behavior and make informed decisions to optimize learning strategies.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="py-20 bg-primary text-center">
+        <h2 class="text-3xl lg:text-4xl font-bold text-white mb-6">Ready to Transform Your Educational Analytics?</h2>
+        <p class="text-xl text-blue-100 mb-8 leading-relaxed">
+            Start analyzing student browsing patterns today and unlock valuable insights for better learning outcomes.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/upload" class="bg-white text-primary px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl inline-block">
+                Try Now
+            </a>
+            <a href="/data" class="border-2 border-white text-white hover:bg-white hover:text-primary px-8 py-4 rounded-lg font-semibold text-lg inline-block">
+                Upload Reports
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-gray-900 text-gray-300 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400 mb-2">© 2025 Mamal Students Browsing History Reporting System. All rights reserved.</p>
+            <p class="text-gray-400">support@mamal.edu | +1 (555) 123-4567</p>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-primary text-white rounded-full shadow-lg hover:bg-secondary flex items-center justify-center transition-opacity opacity-70 hover:opacity-100">
+        ↑
+    </button>
+
+    <script>
+        // Back to Top functionality
+        const backToTop = document.getElementById('backToTop');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.style.display = 'flex';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        backToTop.style.display = 'none';
+    </script>
+</body>
+</html>
