@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Analytics Dashboard</h2>
+        <p class="text-gray-600">Insights and trends from student web activity</p>
+    </div>
+
+    <!-- Spinner overlay -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+    </div>
+    <style>
+        .loader { border-top-color: #3498db; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+
+    <!-- Analytics Filters -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Class</label>
+                <select id="analyticsClassFilter" class="w-full px-4 py-2 border rounded-lg" name="analyticsclassfilter">
+                    <option value="">All Classes</option>
+                    {% for cls in classes %}
+                        <option value="{{ cls }}">{{ cls }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Username</label>
+                <input type="text" id="analyticsUsernameFilter" placeholder="Enter username..." class="w-full px-4 py-2 border rounded-lg">
+            </div>
+            <div class="flex items-end">
+                <button id="updateCharts" class="bg-blue-600 text-white px-6 py-2 rounded-lg">Update Charts</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 10 Websites</h3>
+            <div class="h-80">
+                <canvas id="topWebsitesChart"></canvas>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Most Active Students</h3>
+            <div class="h-80">
+                <canvas id="activeStudentsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visits Over Time Chart -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Visits Over Time</h3>
+        <div class="h-96">
+            <canvas id="visitsTimeChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ summary.total_students }}</div>
+            <div class="text-gray-600">Total Students</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ summary.total_visits }}</div>
+            <div class="text-gray-600">Total Visits</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div class="text-3xl font-bold text-purple-600 mb-2">{{ summary.unique_websites }}</div>
+            <div class="text-gray-600">Unique Websites</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div class="text-3xl font-bold text-orange-600 mb-2">{{ summary.avg_visits_per_student }}</div>
+            <div class="text-gray-600">Avg Visits/Student</div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let topWebsitesChart, activeStudentsChart, visitsTimeChart;
+
+    function initializeCharts(data) {
+        const ctx1 = document.getElementById('topWebsitesChart').getContext('2d');
+        topWebsitesChart = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: data.top_websites.labels,
+                datasets: [{ label: 'Total Visits', data: data.top_websites.data, backgroundColor: 'rgba(59, 130, 246, 0.8)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 1, borderRadius: 4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+        });
+
+        const ctx2 = document.getElementById('activeStudentsChart').getContext('2d');
+        activeStudentsChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: data.active_students.labels,
+                datasets: [{ label: 'Total Visits', data: data.active_students.data, backgroundColor: 'rgba(16, 185, 129, 0.8)', borderColor: 'rgba(16, 185, 129, 1)', borderWidth: 1, borderRadius: 4 }]
+            },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true }, y: { grid: { display: false } } } }
+        });
+
+        const ctx3 = document.getElementById('visitsTimeChart').getContext('2d');
+        visitsTimeChart = new Chart(ctx3, {
+            type: 'line',
+            data: {
+                labels: data.visits_over_time.labels,
+                datasets: [{ label: 'Daily Visits', data: data.visits_over_time.data, borderColor: 'rgba(139, 92, 246, 1)', backgroundColor: 'rgba(139, 92, 246, 0.1)', borderWidth: 3, fill: true, tension: 0.4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+        });
+    }
+
+    const spinner = document.getElementById('loadingSpinner');
+
+    document.getElementById('updateCharts').addEventListener('click', () => {
+        const cls = document.getElementById('analyticsClassFilter').value;
+        const username = document.getElementById('analyticsUsernameFilter').value;
+
+        spinner.classList.remove('hidden'); // show spinner
+
+        fetch(`/analytics_data?class=${cls}&username=${username}`)
+            .then(res => res.json())
+            .then(data => {
+                if (topWebsitesChart) topWebsitesChart.destroy();
+                if (activeStudentsChart) activeStudentsChart.destroy();
+                if (visitsTimeChart) visitsTimeChart.destroy();
+                initializeCharts(data);
+            })
+            .catch(err => console.error(err))
+            .finally(() => spinner.classList.add('hidden')); // hide spinner
+    });
+
+    // Initialize charts on page load
+    const initialData = {{ analytics_data|tojson|safe }};
+    initializeCharts(initialData);
+});
+</script>
+{% endblock %}

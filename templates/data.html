@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">Student Activity Data</h2>
+    <p class="text-gray-600 mb-6">View and analyze student browsing history</p>
+
+    <!-- Spinner overlay -->
+    <div id="loadingSpinner" class="fixed inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+    </div>
+    <style>
+        .loader { border-top-color: #3498db; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+
+    <!-- Filters -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <input type="text" id="searchInput" placeholder="Search username, name, or website..." class="w-full px-4 py-2 border rounded">
+        <select id="classFilter" class="w-full px-4 py-2 border rounded">
+            <option value="">All Classes</option>
+            {% for cls in classes %}
+            <option value="{{ cls }}">{{ cls }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" id="startDate" class="w-full px-4 py-2 border rounded">
+        <input type="date" id="endDate" class="w-full px-4 py-2 border rounded">
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3 mb-6 flex-wrap">
+        <button id="applyFilters" class="bg-blue-600 text-white px-6 py-2 rounded">Apply Filters</button>
+        <a href="{{ url_for('export_csv') }}" class="bg-green-600 text-white px-6 py-2 rounded">Export CSV</a>
+        <a href="{{ url_for('export_pdf') }}" class="bg-green-600 text-white px-6 py-2 rounded">Export PDF</a>
+        <button id="clearFilters" class="bg-gray-500 text-white px-6 py-2 rounded">Clear All</button>
+        <button id="toggleDomainSummary" class="bg-indigo-600 text-white px-6 py-2 rounded">Toggle Domain Summary</button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div id="totalStudents" class="text-3xl font-bold text-blue-600 mb-2">{{ summary.total_students }}</div>
+            <div class="text-gray-600">Total Students</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div id="totalVisits" class="text-3xl font-bold text-green-600 mb-2">{{ summary.total_visits }}</div>
+            <div class="text-gray-600">Total Visits</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div id="uniqueWebsites" class="text-3xl font-bold text-purple-600 mb-2">{{ summary.unique_websites }}</div>
+            <div class="text-gray-600">Unique Websites</div>
+        </div>
+        <div class="bg-white rounded-xl shadow-lg p-6 text-center">
+            <div id="avgVisits" class="text-3xl font-bold text-orange-600 mb-2">{{ summary.avg_visits_per_student }}</div>
+            <div class="text-gray-600">Avg Visits/Student</div>
+        </div>
+    </div>
+
+    <!-- Domain Summary Cards (Togglable) -->
+    <div id="domainSummaryWrapper" class="hidden">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">Top Domains</h3>
+        <div id="domainSummary" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6"></div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-x-auto bg-white rounded shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Website</th>
+                    <th>Visits</th>
+                    <th>Last Visit</th>
+                    <th>Total Visits</th>
+                </tr>
+            </thead>
+            <tbody id="dataTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex justify-center gap-2">
+        <button id="prevPage" class="bg-gray-300 px-4 py-1 rounded">Prev</button>
+        <span id="pageInfo" class="px-2 py-1"></span>
+        <button id="nextPage" class="bg-gray-300 px-4 py-1 rounded">Next</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let currentPage = 1;
+    let totalPages = 1;
+    const spinner = document.getElementById('loadingSpinner');
+    const domainWrapper = document.getElementById('domainSummaryWrapper');
+    const toggleBtn = document.getElementById('toggleDomainSummary');
+
+    toggleBtn.addEventListener('click', () => {
+        domainWrapper.classList.toggle('hidden');
+    });
+
+    function updatePaginationButtons() {
+        document.getElementById('prevPage').disabled = currentPage <= 1;
+        document.getElementById('nextPage').disabled = currentPage >= totalPages;
+    }
+
+    function fetchData() {
+        const username = encodeURIComponent(document.getElementById('searchInput').value);
+        const class_name = encodeURIComponent(document.getElementById('classFilter').value);
+        const start_date = document.getElementById('startDate').value;
+        const end_date = document.getElementById('endDate').value;
+
+        spinner.classList.remove('hidden');
+
+        fetch(`/data_page?username=${username}&class=${class_name}&start_date=${start_date}&end_date=${end_date}&page=${currentPage}`)
+        .then(res => res.json())
+        .then(res => {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            res.data.forEach(row => {
+                tbody.innerHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td>${row.Username_TRNO}</td>
+                    <td>${row.Student_FullName}</td>
+                    <td>${row.Student_Class}</td>
+                    <td><a href="${row.Website_Address}" target="_blank">${row.Website_Address}</a></td>
+                    <td>${row.Visits_to_Website}</td>
+                    <td>${row.Last_Visit_Time}</td>
+                    <td>${row.Total_Visits}</td>
+                </tr>`;
+            });
+
+            // Summary cards
+            document.getElementById('totalStudents').innerText = res.summary.total_students;
+            document.getElementById('totalVisits').innerText = res.summary.total_visits;
+            document.getElementById('uniqueWebsites').innerText = res.summary.unique_websites;
+            document.getElementById('avgVisits').innerText = res.summary.avg_visits_per_student;
+
+            // Note: domain summary not currently in backend; can use top_websites from summary
+            const domainContainer = document.getElementById('domainSummary');
+            domainContainer.innerHTML = '';
+            if (res.summary.top_websites) {
+                res.summary.top_websites.labels.forEach((website, i) => {
+                    const visits = res.summary.top_websites.data[i];
+                    domainContainer.innerHTML += `
+                    <div class="bg-white rounded-lg shadow-md p-4 text-center hover:shadow-lg transition">
+                        <h4 class="text-lg font-semibold text-gray-700 truncate">${website}</h4>
+                        <p class="text-2xl font-bold text-indigo-600">${visits}</p>
+                        <p class="text-sm text-gray-500">Visits</p>
+                    </div>`;
+                });
+            }
+
+            totalPages = Math.ceil(res.total / res.page_size) || 1;
+            document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+            updatePaginationButtons();
+        })
+        .catch(err => console.error(err))
+        .finally(() => spinner.classList.add('hidden'));
+    }
+
+    // Event listeners
+    document.getElementById('applyFilters').addEventListener('click', () => { currentPage = 1; fetchData(); });
+    document.getElementById('clearFilters').addEventListener('click', () => {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('classFilter').value = '';
+        document.getElementById('startDate').value = '';
+        document.getElementById('endDate').value = '';
+        currentPage = 1;
+        fetchData();
+    });
+
+    document.getElementById('prevPage').addEventListener('click', () => {
+        if(currentPage > 1){ currentPage--; fetchData(); }
+    });
+    document.getElementById('nextPage').addEventListener('click', () => {
+        if(currentPage < totalPages){ currentPage++; fetchData(); }
+    });
+
+    // Initial fetch
+    fetchData();
+});
+</script>
+
+
+
+{% endblock %}
